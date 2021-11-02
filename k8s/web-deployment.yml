@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prbot-workflow
+  namespace: prbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prbot-workflow
+  template:
+    metadata:
+      labels:
+        app: prbot-workflow
+    spec:
+      containers:
+        - name: prbot-workflow
+          image: dspe01dacr.azurecr.io/prbot-workflow:latest
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 5001
+          
