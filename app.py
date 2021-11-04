@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 import os, json
 import requests
 import base64
@@ -91,28 +91,32 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return "MLEOps PR Actions bot"
+    return "MLEOps PR Actions bot latest"
 
 
+# TODO: need to rethink of the flow
+# now when the user 
 @app.route('/api/event_handler/', methods=['GET', 'POST'])
 def event_handler():
-    # Assuming to receive this json from https://docs.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.updated
-    # event = request.get_json(silent=True)
+    if request.method == 'GET':
+        return "This is event handler"
 
-    # TODO: we fake the event message and manually "hook" to the PR request change
-    # ref: https://docs.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#work-item-commented-on
-    with open('commented_on_event.json') as f:
-        event = json.load(f)
-    logger.info("event is ", event)
+    if request.method == 'POST':
+        # Assuming to receive this json from https://docs.microsoft.com/en-us/azure/devops/service-hooks/events?view=azure-devops#git.pullrequest.updated
+        event = request.get_json(silent=True)
 
-    if "/run-full-test" in event['detailedMessage']['text']:
-        # we trigger the matched pipeline here using PR api https://docs.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/run-pipeline?view=azure-devops-rest-6.0
-        status_code = trigger_pipeline("https://dev.azure.com/pennyqxr/TestMLOpsPython/_apis/pipelines/1/runs?api-version=6.0-preview.1")
-        if str(status_code) == '200':
-            # we post the status to PR thread as a comment
-            logger.info("get 200 status for trigger pipeline")
-            comment = get_pipeline_run_results(pipeline_id=1, run_id=48)
-            post_comment_on_pr(pr_id=9, comment=comment) # replace the PR ID with organic ID
+        logger.info("event is ", event)
+
+        if "/run-full-test" in event['detailedMessage']['text']:
+            # we trigger the matched pipeline here using PR api https://docs.microsoft.com/en-us/rest/api/azure/devops/pipelines/runs/run-pipeline?view=azure-devops-rest-6.0
+            status_code = trigger_pipeline("https://dev.azure.com/pennyqxr/TestMLOpsPython/_apis/pipelines/1/runs?api-version=6.0-preview.1")
+            if str(status_code) == '200':
+                # we post the status to PR thread as a comment
+                logger.info("get 200 status for trigger pipeline")
+                comment = get_pipeline_run_results(pipeline_id=1, run_id=48)
+                post_comment_on_pr(pr_id=9, comment=comment) # replace the PR ID with organic ID
+        return event
+    
     return "Events handled"
 
 
