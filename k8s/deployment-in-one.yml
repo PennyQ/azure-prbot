@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prbot  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prbot
+  template:
+    metadata:
+      labels:
+        app: prbot
+    spec:
+      containers:
+      - name: prbot
+        image: pennyqxr/prbot:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: TITLE
+          value: "Welcome to Azure Kubernetes Service (AKS)"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prbot 
+spec:
+  type: ClusterIP #default
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: prbot
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prbot
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+  rules:
+  - host: prbot.cc79b111c02442ddbfbd.westeurope.aksapp.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: prbot
+            port: 
+              number: 80
+
+
+              
